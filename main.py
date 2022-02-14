@@ -15,12 +15,12 @@ class ASCIIImage:
 
         self.size = size
         self.img = Image.open(self.path)
-        self.img = self.img.resize((self.size, self.size))
+        self.img = self.img.resize((self.size, round(self.img.size[1]/self.img.size[0]*self.size)))
         self.img = self.img.convert("RGBA")
         self.pixel = self.img.load()
 
     def toImage(self, save_img=False, save_path=".", font_size=16, monochrome=True):
-        ascii_img = Image.new('RGB', (self.size * font_size, self.size * font_size), "black")
+        ascii_img = Image.new('RGB', (self.img.size[0] * font_size, self.img.size[1] * font_size), "black")
         draw = ImageDraw.Draw(ascii_img)
         font = ImageFont.truetype("sans-serif.ttf", size=font_size)
 
@@ -30,7 +30,7 @@ class ASCIIImage:
                     char = " "
                 else:
                     char = self.GRADIENT[math.floor(len(self.GRADIENT) / 255 * (round(sum(self.pixel[i, j][:3]) / 3) - 1))]
-                draw.text((i * font_size, j * font_size), char, self.pixel[i, j][:3] if not monochrome else (255, 255, 255), font=font)
+                draw.text((i * font_size, j * font_size), char, self.pixel[i, j][:3] if not monochrome else (255, 255, 255), font=font, anchor="mm")
             print(i)
 
         if save_img:
@@ -65,3 +65,6 @@ class ASCIIImage:
                 json.dump(result, open(os.path.join(save_path, self.path.split("/")[-1].rsplit(".", 1)[0]+"-ASCII.json"), "w"), indent=4)
             else:
                 print(json.dumps(result, indent=4))
+
+img = ASCIIImage("hmm.jpg", size=160)
+img.toImage(save_img=True)
