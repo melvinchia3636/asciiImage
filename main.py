@@ -65,9 +65,3 @@ class ASCIIImage:
                 json.dump(result, open(os.path.join(save_path, self.path.split("/")[-1].rsplit(".", 1)[0]+"-ASCII.json"), "w"), indent=4)
             else:
                 print(json.dumps(result, indent=4))
-
-img = ASCIIImage("jiahuiiiii.png", size=500)
-img.toImage(save_img=True, monochrome=False)
-#img.toImage(save_img=True, monochrome=True)
-#img.toText(save_img=True, JSON=False)
-#img.toText(save_img=True, JSON=True)
