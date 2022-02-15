@@ -1,13 +1,15 @@
 import json
 from re import ASCII
 from PIL import Image, ImageDraw, ImageFont
+from colour import Color
 import math
 import os
+from tqdm import tqdm
 
 class ASCIIImage:
-    GRADIENT = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "[::-1]
 
-    def __init__(self, path, size=200):
+    def __init__(self, path, size=200, charset=None):
+        self.charset = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "[::-1] if not charset else charset
         if os.path.exists(path):
             self.path = path
         else:
@@ -19,22 +21,26 @@ class ASCIIImage:
         self.img = self.img.convert("RGBA")
         self.pixel = self.img.load()
 
-    def toImage(self, save_img=False, save_path=".", font_size=16, monochrome=True):
-        ascii_img = Image.new('RGB', (self.img.size[0] * font_size, self.img.size[1] * font_size), "black")
+    def toImage(self, save_img=False, save_path=".", font_size=16, multicolor=False, bgcolor="black", brightness=1):
+        ascii_img = Image.new('RGB', (self.img.size[0] * font_size, self.img.size[1] * font_size), bgcolor)
         draw = ImageDraw.Draw(ascii_img)
-        font = ImageFont.truetype("sans-serif.ttf", size=font_size)
+        font = ImageFont.truetype("font.ttf", size=font_size)
+        font.set_variation_by_name('SemiBold')
 
-        for i in range(self.img.size[0]):
+        for i in tqdm(range(self.img.size[0]), unit="lines", desc="Converting image to ASCII art"):
             for j in range(self.img.size[1]):
+                color = Color(rgb=[i/255 for i in self.pixel[i, j][:3]])
+                color.set_luminance(color.get_luminance() * brightness if color.get_luminance() * brightness <= 1 else 1)
+                color = [round(i*255) for i in color.get_rgb()]
+
                 if self.pixel[i, j][3] == 0:
                     char = " "
                 else:
-                    char = self.GRADIENT[math.floor(len(self.GRADIENT) / 255 * (round(sum(self.pixel[i, j][:3]) / 3) - 1))]
-                draw.text((i * font_size, j * font_size), char, self.pixel[i, j][:3] if not monochrome else (255, 255, 255), font=font, anchor="mm")
-            print(i)
+                    char = self.charset[math.floor(len(self.charset) / 255 * (round(sum(color) / 3) - 1))]
+                draw.text((i * font_size, j * font_size), char, tuple(color) if multicolor else (255, 255, 255), font=font, anchor="mm")
 
         if save_img:
-            ascii_img.save(os.path.join(save_path, self.path.split("/")[-1].rsplit(".", 1)[0]+"-ASCII{}.png".format("-color" if not monochrome else "-monochrome")))
+            ascii_img.save(os.path.join(save_path, self.path.split("/")[-1].rsplit(".", 1)[0]+"-ASCII{}.png".format("-color" if multicolor else "-monochrome")))
         else:
             ascii_img.show()
 
@@ -46,9 +52,8 @@ class ASCIIImage:
                 if self.pixel[i, j][3] == 0:
                     char = " "
                 else:
-                    char = self.GRADIENT[math.floor(len(self.GRADIENT) / 255 * (round(sum(self.pixel[i, j][:3]) / 3) - 1))]
+                    char = self.charset[math.floor(len(self.charset) / 255 * (round(sum(self.pixel[i, j][:3]) / 3) - 1))]
                 img[-1] += char
-            print(i)
 
         if not JSON:
             result = "\n".join(img) if turn90deg else "\n".join("".join(i) for i in list(zip(*img)))
@@ -66,5 +71,5 @@ class ASCIIImage:
             else:
                 print(json.dumps(result, indent=4))
 
-img = ASCIIImage("hmm.jpg", size=160)
-img.toImage(save_img=True)
+img = ASCIIImage("aww.png", size=250, charset="$")
+img.toImage(save_img=True, multicolor=True)
