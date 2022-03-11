@@ -6,7 +6,6 @@ import math
 import os
 from tqdm import tqdm
 
-
 class ASCIIImage:
 
     def __init__(self, path, size=200, charset=None):
@@ -59,9 +58,10 @@ class ASCIIImage:
         """
 
         ascii_img = Image.new(
-            'RGB', (self.img.size[0] * (font_size - squeeze), self.img.size[1] * (font_size - squeeze)), bgcolor)
+            'RGBA', (self.img.size[0] * (font_size - squeeze), self.img.size[1] * (font_size - squeeze)), bgcolor)
         draw = ImageDraw.Draw(ascii_img)
-        font = ImageFont.truetype("font.ttf", size=font_size)
+        print(os.getcwd())
+        font = ImageFont.truetype(os.getcwd()+"/src/ascii_image/font.ttf", size=font_size)
         font.set_variation_by_name('SemiBold')
 
         for i in tqdm(range(self.img.size[0]), unit="lines", desc="Converting image to ASCII art"):
